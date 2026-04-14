@@ -432,48 +432,6 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                           </div>
                        </div>
 
-                       {/* Repayment Schedule Table */}
-                       <div className="bg-white/5 border border-white/5 rounded-3xl p-8 max-w-4xl mt-10">
-                          <div className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-6 flex items-center gap-2">
-                             <Clock className="w-4 h-4" /> Active Repayment Plan
-                          </div>
-                          <div className="overflow-x-auto">
-                             <table className="w-full text-left">
-                                <thead>
-                                   <tr className="border-b border-white/5 text-[10px] font-black uppercase text-slate-500">
-                                      <th className="pb-4 pr-6">Installment</th>
-                                      <th className="pb-4 pr-6">Amount</th>
-                                      <th className="pb-4 pr-6">Due Date</th>
-                                      <th className="pb-4">Status</th>
-                                   </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                   {(data?.repayment_plan || []).map((item: any, i: number) => (
-                                      <tr key={i} className="hover:bg-white/5 transition-colors group">
-                                         <td className="py-5 pr-6 text-sm font-bold text-slate-300">{item.month}</td>
-                                         <td className="py-5 pr-6 text-sm font-black text-white">₦{Number(item.amount).toLocaleString()}</td>
-                                         <td className="py-5 pr-6 text-xs text-slate-400">{new Date(item.due_date).toLocaleDateString()}</td>
-                                         <td className="py-5">
-                                            {item.status === 'Paid' ? (
-                                               <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-green-400">
-                                                  <div className="w-1 h-1 rounded-full bg-green-400" /> Paid
-                                               </span>
-                                            ) : item.status === 'Missed' ? (
-                                               <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-red-400">
-                                                  <div className="w-1 h-1 rounded-full bg-red-400" /> Missed
-                                               </span>
-                                            ) : (
-                                               <span className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-500">
-                                                  <div className="w-1 h-1 rounded-full bg-slate-500" /> Upcoming
-                                               </span>
-                                            )}
-                                         </td>
-                                      </tr>
-                                   ))}
-                                </tbody>
-                             </table>
-                          </div>
-                       </div>
                     </div>
                  </div>
 

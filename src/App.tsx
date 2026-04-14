@@ -236,6 +236,11 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
   const [nokState, setNokState] = useState("");
   const [nokCountry] = useState("Nigeria");
 
+  // New states for Step 2 persistence
+  const [isOwner, setIsOwner] = useState("true");
+  const [hasInsurance, setHasInsurance] = useState("");
+  const [insuranceType, setInsuranceType] = useState("");
+
   // File states
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     roadworthiness_certificate: null,
@@ -257,7 +262,9 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
     formData.append('car_make', make);
     formData.append('car_model', model);
     formData.append('car_year', year);
-    formData.append('is_owner', 'true');
+    formData.append('is_owner', isOwner);
+    formData.append('has_insurance', hasInsurance);
+    formData.append('insurance_type', insuranceType);
     formData.append('state_of_res', stateOfRes);
     formData.append('tenure', tenure);
     formData.append('car_plate', plateNumber);
@@ -605,11 +612,25 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         <p className="text-sm font-bold text-slate-700 mb-4">Are you the registered owner of the car?</p>
                         <div className="flex gap-8">
                           <label className="flex items-center gap-2 cursor-pointer group">
-                             <input type="radio" name="owner" className="w-5 h-5 accent-primary" />
+                             <input 
+                               type="radio" 
+                               name="owner" 
+                               value="true"
+                               checked={isOwner === "true"}
+                               onChange={(e) => setIsOwner(e.target.value)}
+                               className="w-5 h-5 accent-primary" 
+                             />
                              <span className="font-bold text-slate-600 group-hover:text-primary transition-colors">Yes</span>
                           </label>
                           <label className="flex items-center gap-2 cursor-pointer group">
-                             <input type="radio" name="owner" className="w-5 h-5 accent-primary" />
+                             <input 
+                               type="radio" 
+                               name="owner" 
+                               value="false"
+                               checked={isOwner === "false"}
+                               onChange={(e) => setIsOwner(e.target.value)}
+                               className="w-5 h-5 accent-primary" 
+                             />
                              <span className="font-bold text-slate-600 group-hover:text-primary transition-colors">No</span>
                           </label>
                         </div>
@@ -643,18 +664,26 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">Does your car have Insurance?</label>
-                        <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none">
-                          <option>Select Option</option>
-                          <option>Yes</option>
-                          <option>No</option>
+                        <select 
+                          value={hasInsurance}
+                          onChange={(e) => setHasInsurance(e.target.value)}
+                          className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none"
+                        >
+                          <option value="">Select Option</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
                         </select>
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">What type of insurance do you have?</label>
-                        <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none">
-                          <option>Insurance Type</option>
-                          <option>Third Party</option>
-                          <option>Comprehensive</option>
+                        <select 
+                          value={insuranceType}
+                          onChange={(e) => setInsuranceType(e.target.value)}
+                          className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none"
+                        >
+                          <option value="">Insurance Type</option>
+                          <option value="Third Party">Third Party</option>
+                          <option value="Comprehensive">Comprehensive</option>
                         </select>
                       </div>
                     </div>

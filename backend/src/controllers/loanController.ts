@@ -237,7 +237,20 @@ export const getAdminLoans = async (req: Request, res: Response) => {
             ORDER BY l.created_at DESC
         `);
         
-        res.json(loans.map((l: any) => enrichLoanData(l)));
+        const enriched = loans.map((l: any) => {
+            const enrichedLoan = enrichLoanData(l);
+            // Handle JSON parsing for documents if it comes back as a string from MySQL
+            if (typeof enrichedLoan.documents === 'string') {
+                try {
+                    enrichedLoan.documents = JSON.parse(enrichedLoan.documents);
+                } catch (e) {
+                    enrichedLoan.documents = [];
+                }
+            }
+            return enrichedLoan;
+        });
+        
+        res.json(enriched);
     } catch (error) {
         console.error('Fetch Admin Loans Error:', error);
         res.status(500).json({ message: 'Internal server error' });
