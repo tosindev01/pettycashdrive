@@ -462,9 +462,18 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                           ))}
                        </div>
                     </div>
-                    <button className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">
-                       Need to update documents? Contact Support <ChevronRight className="w-4 h-4" />
-                    </button>
+                    <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/5">
+                       <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Need to update documents? Contact Support:</span>
+                       <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-white/80">
+                         <a href="mailto:support@pettycash.com.ng" className="hover:text-primary transition-colors flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> support@pettycash.com.ng
+                         </a>
+                         <span className="text-white/20">|</span>
+                         <a href="tel:+2348000000000" className="hover:text-primary transition-colors flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> +234 800 000 0000
+                         </a>
+                       </div>
+                    </div>
                  </div>
               </div>
             </motion.div>

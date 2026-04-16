@@ -88,7 +88,10 @@ export class NotificationService {
         loan_ref: ref,
         status: "RECEIVED",
         current_year: new Date().getFullYear().toString(),
-        company_name: "PettyCash"
+        company_name: "PettyCash",
+        dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+        login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+        action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
      };
      const APP_RECEIVED_TEMPLATE_ID = process.env.TERMII_EMAIL_APP_RECEIVED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
      await this.sendEmail(user.email, `Application Received: #${ref}`, emailVariables, APP_RECEIVED_TEMPLATE_ID);
@@ -108,7 +111,10 @@ export class NotificationService {
        loan_ref: ref,
        status: statusMsg,
        current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash"
+       company_name: "PettyCash",
+       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
     };
 
     let targetTemplate = process.env.TERMII_EMAIL_TEMPLATE_ID;
@@ -138,7 +144,10 @@ export class NotificationService {
        loan_ref: ref,
        outstanding_balance: balance,
        current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash"
+       company_name: "PettyCash",
+       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
     };
 
     await this.sendEmail(user.email, `Payment Confirmation: #${ref}`, emailVariables);
@@ -156,7 +165,10 @@ export class NotificationService {
        action: "Account Creation",
        status: "SUCCESS",
        current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash"
+       company_name: "PettyCash",
+       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
+       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
     };
     await this.sendEmail(user.email, `Welcome to PettyCash, ${user.name}!`, emailVariables, process.env.TERMII_EMAIL_TEMPLATE_ID);
   }
