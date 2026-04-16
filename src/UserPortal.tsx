@@ -18,7 +18,9 @@ import {
   Info,
   X,
   Menu,
-  Clock
+  Clock,
+  User,
+  Lock
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -210,6 +212,12 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                 onClick={() => { setActiveTab("Car"); setShowMobileMenu(false); }} 
               />
               <NavButton 
+                icon={<User className="w-5 h-5" />} 
+                label="Profile & Account" 
+                active={activeTab === "Profile"} 
+                onClick={() => { setActiveTab("Profile"); setShowMobileMenu(false); }} 
+              />
+              <NavButton 
                 icon={<History className="w-5 h-5" />} 
                 label="Payments" 
                 active={activeTab === "Payments"} 
@@ -366,16 +374,14 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                              <div className="text-lg font-black text-white">{loanAmount !== "₦0" ? loanAmount : "Pending Valuation"}</div>
                           </div>
                           <div className="text-right">
-                             <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Proposed Tenure</div>
-                             <div className="text-lg font-black text-white">{data?.tenure ? `${data.tenure} Months` : "12 Months"}</div>
+                             <div className="text-[10px] font-black text-primary uppercase mb-1">Repayment Date</div>
+                             <div className="text-lg font-black text-white">{data?.next_payment_date ? new Date(data.next_payment_date).toLocaleDateString() : 'N/A'}</div>
                           </div>
                        </div>
                        <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
                           <div>
-                             <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Vehicle Details</div>
-                             <div className="text-lg font-black text-white">
-                                {data ? `${carInfo.make} ${carInfo.model} (${carInfo.year})` : "Vehicle Details Pending"}
-                             </div>
+                             <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Proposed Tenure</div>
+                             <div className="text-lg font-black text-white">{data?.tenure ? `${data.tenure} Months` : "12 Months"}</div>
                           </div>
                           <div className="text-right">
                              <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Status</div>
@@ -735,7 +741,128 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
             </motion.div>
           )}
 
-          {activeTab === "Payments" && (
+           {activeTab === "Profile" && (
+             <motion.div
+               key="profile"
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               exit={{ opacity: 0, x: -20 }}
+               className="space-y-10"
+             >
+                <div className="flex justify-between items-end">
+                   <div>
+                     <h2 className="text-3xl font-black">Customer Profile</h2>
+                     <p className="text-muted-foreground mt-2">Manage your personal information and financial records.</p>
+                   </div>
+                   <div className="px-5 py-2.5 bg-green-500/10 border border-green-500/20 text-green-500 rounded-full text-[10px] font-black uppercase tracking-widest">Verified Account</div>
+                </div>
+ 
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                   <div className="lg:col-span-2 space-y-8">
+                      <div className="bg-card/40 border border-white/5 rounded-[3rem] p-12">
+                         <div className="flex items-center gap-6 mb-12">
+                            <div className="w-24 h-24 rounded-3xl bg-primary/20 border border-primary/10 p-1">
+                               <img src="https://i.pravatar.cc/150?u=user" className="w-full h-full object-cover rounded-2xl shadow-2xl shadow-primary/20" />
+                            </div>
+                            <div>
+                               <h3 className="text-4xl font-black">{userName}</h3>
+                               <p className="text-muted-foreground mt-1">{data?.email || "user@example.com"}</p>
+                               <div className="flex items-center gap-3 mt-4">
+                                  <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-slate-400 border border-white/5 uppercase"># {loanRef}</div>
+                                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary border border-primary/10 uppercase">TIER 1 BORROWER</div>
+                               </div>
+                            </div>
+                         </div>
+ 
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase mb-3 tracking-widest">Contact Number</div>
+                               <div className="text-lg font-bold text-white">{data?.phone || "Not Provided"}</div>
+                            </div>
+                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase mb-3 tracking-widest">Location</div>
+                               <div className="text-lg font-bold text-white">{data?.state_of_res || "Lagos, Nigeria"}</div>
+                            </div>
+                         </div>
+                      </div>
+ 
+                      <div className="bg-card/40 border border-white/5 rounded-[3rem] p-12 overflow-hidden relative group">
+                         <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 group-hover:rotate-12 transition-transform duration-700">
+                            <CreditCard className="w-64 h-64 text-primary" />
+                         </div>
+                         
+                         <h3 className="text-2xl font-black mb-10 flex items-center gap-3 relative z-10">
+                            <Zap className="text-primary w-6 h-6" /> Financial Snapshot
+                         </h3>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase mb-2">Total Debt</div>
+                               <div className="text-2xl font-black text-white">₦{remainingVal.toLocaleString()}</div>
+                            </div>
+                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase mb-2">Total Paid</div>
+                               <div className="text-2xl font-black text-green-400">₦{paidVal.toLocaleString()}</div>
+                            </div>
+                            <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase mb-2">Credit Limit</div>
+                               <div className="text-2xl font-black text-primary">₦{(totalLoanVal * 1.5).toLocaleString()}</div>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+ 
+                   <div className="space-y-8">
+                      <div className="bg-primary border border-primary/20 rounded-[3rem] p-10 text-primary-foreground shadow-2xl shadow-primary/20 relative overflow-hidden group">
+                         <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                            <Clock className="w-32 h-32" />
+                         </div>
+                         <h3 className="text-xl font-black mb-8 relative z-10">Service Summary</h3>
+                         <div className="space-y-6 relative z-10">
+                            <div className="flex justify-between items-center border-b border-primary-foreground/10 pb-4">
+                               <div className="text-[10px] font-black uppercase text-primary-foreground/60 tracking-widest">Next Payment Date</div>
+                               <div className="text-xl font-black">{data?.next_payment_date ? new Date(data.next_payment_date).toLocaleDateString() : 'N/A'}</div>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-primary-foreground/10 pb-4">
+                               <div className="text-[10px] font-black uppercase text-primary-foreground/60 tracking-widest">Final Payout</div>
+                               <div className="text-xl font-black text-white/90">{data?.final_payout_date ? new Date(data.final_payout_date).toLocaleDateString() : 'N/A'}</div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                               <div className="text-[10px] font-black uppercase text-primary-foreground/60 tracking-widest">Account Status</div>
+                               <div className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase">{userStatus}</div>
+                            </div>
+                         </div>
+ 
+                         <button onClick={handlePayment} className="w-full mt-10 py-5 bg-white text-[#020617] rounded-3xl font-black text-sm hover:scale-105 transition-all shadow-2xl active:scale-95">
+                            Make Outstanding Payment
+                         </button>
+                      </div>
+ 
+                      <div className="bg-white/5 border border-white/10 rounded-[3rem] p-10">
+                         <h3 className="text-xl font-black mb-6">Security & Settings</h3>
+                         <div className="space-y-4">
+                            <button className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors text-left group">
+                               <div className="flex items-center gap-3">
+                                  <Lock className="w-4 h-4 text-primary" />
+                                  <span className="text-sm font-bold">Change Password</span>
+                               </div>
+                               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <button className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors text-left group">
+                               <div className="flex items-center gap-3">
+                                  <ShieldCheck className="w-4 h-4 text-green-400" />
+                                  <span className="text-sm font-bold">Privacy Settings</span>
+                               </div>
+                               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </motion.div>
+           )}
+ 
+           {activeTab === "Payments" && (
             <motion.div
               key="payments"
               initial={{ opacity: 0, x: 20 }}

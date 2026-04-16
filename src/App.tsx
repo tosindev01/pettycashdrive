@@ -1116,7 +1116,7 @@ export default function App() {
               <span className="text-primary italic">Fast Cash in Lagos.</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl">
-              From Ikeja to Abuja, we're helping Nigerians unlock liquidity from their cars in less than 24 hours. No stress, no bank wahala—just simple, fast loans.
+              From Lagos to Abuja, we're helping Nigerians unlock liquidity from their cars in less than 24 hours. No stress, no bank wahala—just simple, fast loans.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button 

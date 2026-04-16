@@ -48,10 +48,14 @@ const enrichLoanData = (loan: any) => {
         });
     }
 
-    // Next Payment Date logic: Month N+1 if they have paid N months
-    const monthsPaid = Math.floor(amountPaid / (monthlyPayment - 0.01));
-    const nextPaymentDate = new Date(loan.created_at);
-    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + monthsPaid + 1);
+    // Next Payment Date logic: Priority to DB field, fallback to auto-calculation
+    const nextPaymentDate = loan.next_repayment_date 
+        ? new Date(loan.next_repayment_date) 
+        : (() => {
+            const d = new Date(loan.created_at);
+            d.setMonth(d.getMonth() + Math.floor(amountPaid / (monthlyPayment - 0.01)) + 1);
+            return d;
+          })();
 
     const finalPayoutDate = new Date(loan.created_at);
     finalPayoutDate.setMonth(finalPayoutDate.getMonth() + tenure);
@@ -100,16 +104,21 @@ export const createLoan = async (req: Request, res: Response) => {
         const loanId = uuidv4();
         const loanReference = `PC-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}`;
         
+        const nextPaymentDate = new Date();
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+        
         await connection.execute(
             `INSERT INTO loans (
                 id, user_id, amount, tenure, loan_reference, status,
                 bank_name, account_number, account_name, nin, bvn,
-                nok_name, nok_phone, nok_email, nok_address, nok_city, nok_state, nok_country
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                nok_name, nok_phone, nok_email, nok_address, nok_city, nok_state, nok_country,
+                next_repayment_date
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 loanId, user_id, amount, tenure || 12, loanReference, 'pending',
                 bank_name || '', account_number || '', account_name || '', nin || '', bvn || '',
-                nok_name || '', nok_phone || '', nok_email || '', nok_address || '', nok_city || '', nok_state || '', nok_country || ''
+                nok_name || '', nok_phone || '', nok_email || '', nok_address || '', nok_city || '', nok_state || '', nok_country || '',
+                nextPaymentDate
             ]
         );
 

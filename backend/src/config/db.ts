@@ -48,7 +48,8 @@ export const connectDB = async () => {
             'nok_address TEXT',
             'nok_city VARCHAR(100)',
             'nok_state VARCHAR(100)',
-            'nok_country VARCHAR(100)'
+            'nok_country VARCHAR(100)',
+            'next_repayment_date DATE'
         ];
 
         for (const colDef of newCols) {
