@@ -14,7 +14,7 @@ export class NotificationService {
       // Ensure phone is in international format for Nigeria (Termii requirement)
       let formattedPhone = to.trim();
       if (formattedPhone.startsWith('0')) {
-          formattedPhone = '234' + formattedPhone.slice(1);
+        formattedPhone = '234' + formattedPhone.slice(1);
       }
 
       const data = {
@@ -32,7 +32,7 @@ export class NotificationService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      
+
       const resData = await response.json();
       console.log('SMS status:', resData);
       return resData;
@@ -62,9 +62,9 @@ export class NotificationService {
 
       const TERMII_BASE_URL = process.env.TERMII_BASE_URL || 'https://v3.api.termii.com';
       const response = await fetch(`${TERMII_BASE_URL}/api/templates/send-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
 
       const resData = await response.json();
@@ -79,22 +79,22 @@ export class NotificationService {
    * Notify user when loan application is received
    */
   static async notifyApplicationReceived(user: { name: string, email: string, phone: string }, ref: string, amount: string) {
-     const smsText = `Hi ${user.name}, your PettyCash loan application (Ref: ${ref}) for N${amount} has been received. Our team will review it within 24 hours.`;
-     await this.sendSMS(user.phone, smsText);
+    const smsText = `Hi ${user.name}, your PettyCash loan application (Ref: ${ref}) for N${amount} has been received. Our team will review it within 24 hours.`;
+    await this.sendSMS(user.phone, smsText);
 
-     const emailVariables = {
-        name: user.name,
-        balance: amount,
-        loan_ref: ref,
-        status: "RECEIVED",
-        current_year: new Date().getFullYear().toString(),
-        company_name: "PettyCash",
-        dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-        login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-        action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
-     };
-     const APP_RECEIVED_TEMPLATE_ID = process.env.TERMII_EMAIL_APP_RECEIVED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
-     await this.sendEmail(user.email, `Application Received: #${ref}`, emailVariables, APP_RECEIVED_TEMPLATE_ID);
+    const emailVariables = {
+      name: user.name,
+      balance: amount,
+      loan_ref: ref,
+      status: "RECEIVED",
+      current_year: new Date().getFullYear().toString(),
+      company_name: "PettyCash",
+      dashboard_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      login_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      action_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng"
+    };
+    const APP_RECEIVED_TEMPLATE_ID = process.env.TERMII_EMAIL_APP_RECEIVED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
+    await this.sendEmail(user.email, `Application Received: #${ref}`, emailVariables, APP_RECEIVED_TEMPLATE_ID);
   }
 
   /**
@@ -106,26 +106,26 @@ export class NotificationService {
     await this.sendSMS(user.phone, smsText);
 
     const emailVariables = {
-       name: user.name,
-       balance: amount,
-       loan_ref: ref,
-       status: statusMsg,
-       current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash",
-       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
+      name: user.name,
+      balance: amount,
+      loan_ref: ref,
+      status: statusMsg,
+      current_year: new Date().getFullYear().toString(),
+      company_name: "PettyCash",
+      dashboard_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      login_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      action_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng"
     };
 
     let targetTemplate = process.env.TERMII_EMAIL_TEMPLATE_ID;
     let emailSubject = `Loan Application Update: #${ref}`;
 
     if (status === 'disbursed') {
-       targetTemplate = process.env.TERMII_EMAIL_DISBURSED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
-       emailSubject = `PettyCash Payment Alert: #${ref}`;
+      targetTemplate = process.env.TERMII_EMAIL_DISBURSED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
+      emailSubject = `PettyCash Payment Alert: #${ref}`;
     } else if (status === 'rejected') {
-       targetTemplate = process.env.TERMII_EMAIL_DECLINED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
-       emailSubject = `Update on your Loan Application: #${ref}`;
+      targetTemplate = process.env.TERMII_EMAIL_DECLINED_ID || process.env.TERMII_EMAIL_TEMPLATE_ID;
+      emailSubject = `Update on your Loan Application: #${ref}`;
     }
 
     await this.sendEmail(user.email, emailSubject, emailVariables, targetTemplate);
@@ -139,15 +139,15 @@ export class NotificationService {
     await this.sendSMS(user.phone, smsText);
 
     const emailVariables = {
-       name: user.name,
-       amount_paid: amount,
-       loan_ref: ref,
-       outstanding_balance: balance,
-       current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash",
-       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
+      name: user.name,
+      amount_paid: amount,
+      loan_ref: ref,
+      outstanding_balance: balance,
+      current_year: new Date().getFullYear().toString(),
+      company_name: "PettyCash",
+      dashboard_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      login_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      action_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng"
     };
 
     await this.sendEmail(user.email, `Payment Confirmation: #${ref}`, emailVariables);
@@ -161,14 +161,14 @@ export class NotificationService {
     await this.sendSMS(user.phone, smsText);
 
     const emailVariables = {
-       name: user.name,
-       action: "Account Creation",
-       status: "SUCCESS",
-       current_year: new Date().getFullYear().toString(),
-       company_name: "PettyCash",
-       dashboard_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       login_link: process.env.FRONTEND_URL || "https://pettycash.com.ng",
-       action_link: process.env.FRONTEND_URL || "https://pettycash.com.ng"
+      name: user.name,
+      action: "Account Creation",
+      status: "SUCCESS",
+      current_year: new Date().getFullYear().toString(),
+      company_name: "PettyCash",
+      dashboard_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      login_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng",
+      action_link: process.env.FRONTEND_URL || "https://new.pettycash.com.ng"
     };
     await this.sendEmail(user.email, `Welcome to PettyCash, ${user.name}!`, emailVariables, process.env.TERMII_EMAIL_TEMPLATE_ID);
   }
