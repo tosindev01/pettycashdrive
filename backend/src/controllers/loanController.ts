@@ -14,6 +14,13 @@ const logAudit = async (adminId: string | null, loanId: string, action: string, 
     }
 };
 
+const formatFileUrl = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('http')) return url;
+    const baseUrl = process.env.API_URL || 'http://localhost:5001';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const calculateRiskScore = (amount: number, valuation: number, isOwner: boolean) => {
     const ltv = (amount / (valuation || amount * 1.5)) * 100;
     const ownershipPenalty = isOwner ? 0 : 30;
@@ -199,7 +206,7 @@ export const getLoanDetails = async (req: Request, res: Response) => {
                 valuation: loan.valuation,
                 is_owner: loan.is_owner
             },
-            documents: docs,
+            documents: docs.map((d: any) => ({ ...d, url: formatFileUrl(d.url) })),
             history: history
         });
     } catch (error) {
@@ -257,6 +264,15 @@ export const getAdminLoans = async (req: Request, res: Response) => {
                     enrichedLoan.documents = [];
                 }
             }
+            
+            // Format document URLs
+            if (Array.isArray(enrichedLoan.documents)) {
+                enrichedLoan.documents = enrichedLoan.documents.map((d: any) => ({
+                    ...d,
+                    url: formatFileUrl(d.url)
+                }));
+            }
+            
             return enrichedLoan;
         });
         
