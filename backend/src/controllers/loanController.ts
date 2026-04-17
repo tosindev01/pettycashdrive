@@ -171,7 +171,7 @@ export const getLoanDetails = async (req: Request, res: Response) => {
     try {
         const [loans]: any = await pool.execute(`
             SELECT 
-                l.*, u.name as user_name,
+                l.*, u.name as user_name, u.email as user_email, u.phone as user_phone,
                 c.make, c.model, c.year, c.plate_number, c.valuation, c.is_owner,
                 IFNULL((SELECT SUM(amount) FROM payments WHERE loan_id = l.id AND status = 'successful'), 0) as amount_paid
             FROM loans l 
@@ -179,6 +179,7 @@ export const getLoanDetails = async (req: Request, res: Response) => {
             LEFT JOIN car_details c ON l.id = c.loan_id
             WHERE l.id = ?
         `, [id]);
+
         
         if (loans.length === 0) {
             return res.status(404).json({ message: 'Loan not found' });

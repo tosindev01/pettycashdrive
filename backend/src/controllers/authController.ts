@@ -123,3 +123,34 @@ export const cleanupSystem = async (req: Request, res: Response) => {
         connection.release();
     }
 };
+
+export const changePassword = async (req: Request, res: Response) => {
+    const { userId, oldPassword, newPassword } = req.body;
+
+    if (!userId || !oldPassword || !newPassword) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const [users]: any = await pool.execute('SELECT * FROM users WHERE id = ?', [userId]);
+        const user = users[0];
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Current password does not match nuestro records.' });
+        }
+
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, userId]);
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Change Password Error:', error);
+        res.status(500).json({ message: 'Failed to update password' });
+    }
+};
+

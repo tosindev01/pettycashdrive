@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getAdminUsers, cleanupSystem } from '../controllers/authController';
+import { register, login, getAdminUsers, cleanupSystem, changePassword } from '../controllers/authController';
 import { createLoan, getUserLoans, getLoanDetails, getAdminLoans, updateLoanStatus, addLoanPayment, getAuditLogs, getAdminStats } from '../controllers/loanController';
 import { upload } from '../middleware/upload';
 
@@ -8,6 +8,8 @@ const router = Router();
 // Auth Routes
 router.post('/auth/register', register);
 router.post('/auth/login', login);
+router.put('/auth/change-password', changePassword);
+
 
 // Loan Routes
 router.post('/loans', upload.fields([

@@ -82,6 +82,11 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+
+
 
   const fetchUserData = async () => {
     try {
@@ -115,8 +120,14 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
   }
 
   const userStatus = data?.status || 'pending';
-  const userName = data?.name || "User";
+  const fullName = data?.user_name || data?.name || "User";
+  const firstName = fullName.split(' ')[0];
+  const userName = firstName === "User" ? "User" : firstName;
+
+  const userPhone = data?.user_phone || data?.phone || "Not Provided";
+  const userEmail = data?.user_email || data?.email || "user@example.com";
   const loanAmount = data?.amount ? `₦${Number(data.amount).toLocaleString()}` : "₦0";
+
   const carInfo = data?.car || { make: "Vehicle", model: "Pending", year: "2024", plate_number: "N/A", valuation: 0 };
   const loanRef = data?.loan_reference || "#PC-PENDING";
   const adminNotes = data?.admin_notes || "Your application did not meet our criteria at this time.";
@@ -160,6 +171,52 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
       }
     });
   };
+
+  const handleExportCSV = () => {
+    if (!data?.history || data.history.length === 0) return setModal({ show: true, title: 'No Data', message: 'There are no transactions to export.', type: 'error' });
+    
+    let csv = 'Date,Reference,Amount,Method,Status\n';
+    data.history.forEach((h: any) => {
+      csv += `${new Date(h.date).toLocaleDateString()},#${h.id},${h.amount},${h.method},${h.status}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `PettyCash_Statement_${loanRef}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      return setModal({ show: true, title: 'Error', message: 'New passwords do not match.', type: 'error' });
+    }
+    
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, oldPassword: passwordData.oldPassword, newPassword: passwordData.newPassword })
+      });
+      
+      const result = await res.json();
+      if (res.ok) {
+        setModal({ show: true, title: 'Success', message: 'Password changed successfully.', type: 'success' });
+        setShowPasswordModal(false);
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setModal({ show: true, title: 'Error', message: result.message || 'Failed to change password.', type: 'error' });
+      }
+    } catch (err) {
+      setModal({ show: true, title: 'Error', message: 'Network error. Please try again.', type: 'error' });
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col lg:flex-row relative">
@@ -248,13 +305,14 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
       <main className="flex-1 lg:ml-72 p-6 md:p-10 max-w-7xl">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
            <div>
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-2">Welcome, {userName === "User" ? "User" : userName.split(' ')[0]} 👋</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-white mb-2">Welcome, {userName} 👋</h1>
               <p className="text-muted-foreground font-medium flex items-center gap-2">
-                User ID: <span className="font-mono text-xs font-bold text-primary">{loanRef}</span>
+                User ID: <span className="font-mono text-xs font-bold text-primary">{loanRef.replace('#', '')}</span>
                 <span className="w-1 h-1 rounded-full bg-white/20" />
-                {userStatus === 'pending' ? 'Review in progress' : 'Updated Today'}
+                {userStatus === 'pending' ? 'Review in progress' : `Updated Today the ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`}
               </p>
            </div>
+
            
            <div className="flex items-center gap-4">
               <div className="relative">
@@ -543,9 +601,12 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                       <button onClick={handlePayment} className="px-8 py-3.5 bg-primary text-primary-foreground rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20 flex items-center gap-2">
                         Make Instant Payment <ArrowUpRight className="w-4 h-4" />
                       </button>
-                      <button className="px-8 py-3.5 bg-white/5 text-white border border-white/10 rounded-2xl font-black text-sm hover:bg-white/10 transition-all">
-                        View Schedule
-                      </button>
+                      <button 
+                         onClick={() => setShowScheduleModal(true)}
+                         className="px-8 py-3.5 bg-white/5 text-white border border-white/10 rounded-2xl font-black text-sm hover:bg-white/10 transition-all"
+                       >
+                         View Schedule
+                       </button>
                    </div>
                 </div>
 
@@ -605,9 +666,12 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                  <div className="lg:col-span-2 bg-card/40 border border-white/5 rounded-[3rem] overflow-hidden">
                     <div className="p-8 border-b border-white/5 flex justify-between items-center">
                        <h3 className="text-xl font-black">Payment History</h3>
-                       <button className="text-xs font-bold text-primary flex items-center gap-2 hover:underline">
-                          <Download className="w-4 h-4" /> Export Statement
-                       </button>
+                       <button 
+                          onClick={handleExportCSV}
+                          className="text-xs font-bold text-primary flex items-center gap-2 hover:underline"
+                        >
+                           <Download className="w-4 h-4" /> Export Statement
+                        </button>
                     </div>
                     <div className="p-0">
                        <table className="w-full text-left">
@@ -672,37 +736,73 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                   </button>
                </div>
 
-                <div className="grid grid-cols-1 gap-8">
-                   <div className="bg-card/40 border border-white/5 rounded-[3rem] p-10">
-                      <div className="flex items-center gap-4 mb-8">
-                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                            <PieChartIcon className="w-6 h-6" />
-                         </div>
-                         <h3 className="text-xl font-black">Repayment Metrics</h3>
-                      </div>
-                      
-                      <div className="bg-white/5 border border-white/5 rounded-3xl p-8 max-w-4xl">
-                         <div className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-6">Key Metrics</div>
-                         <div className="grid md:grid-cols-2 gap-x-12 gap-y-4">
-                            {[
-                              { label: 'Amount Disbursed', val: `₦${Number(data?.amount_disbursed || 0).toLocaleString()}` },
-                              { label: 'Total Payback', val: `₦${totalToPay.toLocaleString()}` },
-                              { label: 'Monthly Payment', val: `₦${monthlyRepayment.toLocaleString()}` },
-                              { label: 'Interest Rate', val: data?.interest_rate || '3.5%' },
-                              { label: 'Tenure', val: `${data?.tenure || 12} Months` },
-                               { label: 'Next Payment', val: data?.next_payment_date ? new Date(data.next_payment_date).toLocaleDateString() : 'N/A' },
-                               { label: 'Final Payout', val: data?.final_payout_date ? new Date(data.final_payout_date).toLocaleDateString() : 'N/A' },
-                              { label: 'Remaining Balance', val: `₦${remainingVal.toLocaleString()}`, highlight: true }
-                            ].map((m, i) => (
-                              <div key={i} className="flex justify-between items-center border-b border-white/5 pb-3">
-                                 <span className="text-xs font-medium text-slate-400">{m.label}</span>
-                                 <span className={cn("text-sm font-black", m.highlight ? "text-red-400" : "text-white")}>{m.val}</span>
-                              </div>
-                            ))}
-                         </div>
-                      </div>
-                   </div>
-                </div>
+                 <div className="grid grid-cols-1 gap-8">
+                    <div className="bg-card/40 border border-white/5 rounded-[3rem] p-10">
+                       <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                             <PieChartIcon className="w-6 h-6" />
+                          </div>
+                          <h3 className="text-xl font-black">Repayment Metrics</h3>
+                       </div>
+                       
+                       <div className="grid lg:grid-cols-3 gap-8">
+                          <div className="lg:col-span-1 bg-white/5 border border-white/5 rounded-3xl p-8">
+                             <div className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-6">Key Metrics</div>
+                             <div className="space-y-4">
+                                {[
+                                  { label: 'Amount Disbursed', val: `₦${Number(data?.amount_disbursed || 0).toLocaleString()}` },
+                                  { label: 'Total Payback', val: `₦${totalToPay.toLocaleString()}` },
+                                  { label: 'Monthly Payment', val: `₦${monthlyRepayment.toLocaleString()}` },
+                                  { label: 'Interest Rate', val: data?.interest_rate || '3.5%' },
+                                  { label: 'Tenure', val: `${data?.tenure || 12} Months` },
+                                  { label: 'Next Payment', val: data?.next_payment_date ? new Date(data.next_payment_date).toLocaleDateString() : 'N/A' },
+                                  { label: 'Remaining Balance', val: `₦${remainingVal.toLocaleString()}`, highlight: true }
+                                ].map((m, i) => (
+                                  <div key={i} className="flex justify-between items-center border-b border-white/5 pb-3">
+                                     <span className="text-xs font-medium text-slate-400">{m.label}</span>
+                                     <span className={cn("text-sm font-black", m.highlight ? "text-red-400" : "text-white")}>{m.val}</span>
+                                  </div>
+                                ))}
+                             </div>
+                          </div>
+
+                          <div className="lg:col-span-2 bg-white/5 border border-white/5 rounded-3xl p-8">
+                             <div className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-6">Repayment Schedule</div>
+                             <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                   <thead>
+                                      <tr className="text-[10px] text-muted-foreground uppercase font-black tracking-widest border-b border-white/5">
+                                         <th className="pb-4 pr-4">Installment</th>
+                                         <th className="pb-4 pr-4">Amount</th>
+                                         <th className="pb-4 pr-4">Due Date</th>
+                                         <th className="pb-4">Status</th>
+                                      </tr>
+                                   </thead>
+                                   <tbody className="divide-y divide-white/5">
+                                      {(data?.repayment_plan || []).map((item: any, i: number) => (
+                                         <tr key={i} className="group hover:bg-white/5 transition-colors">
+                                            <td className="py-4 pr-4 text-sm font-bold text-white/90">{item.month}</td>
+                                            <td className="py-4 pr-4 text-sm font-black text-white">₦{Number(item.amount).toLocaleString()}</td>
+                                            <td className="py-4 pr-4 text-xs text-muted-foreground">{new Date(item.due_date).toLocaleDateString()}</td>
+                                            <td className="py-4">
+                                               <span className={cn(
+                                                  "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
+                                                  item.status === 'Paid' ? "bg-green-500/10 text-green-400 border-green-500/20" : 
+                                                  item.status === 'Missed' ? "bg-red-500/10 text-red-400 border-red-500/20" : 
+                                                  "bg-white/5 text-muted-foreground border-white/10"
+                                               )}>
+                                                  {item.status}
+                                               </span>
+                                            </td>
+                                         </tr>
+                                      ))}
+                                   </tbody>
+                                </table>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
             </motion.div>
           )}
 
@@ -775,7 +875,7 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                             </div>
                             <div>
                                <h3 className="text-4xl font-black">{userName}</h3>
-                               <p className="text-muted-foreground mt-1">{data?.email || "user@example.com"}</p>
+                               <p className="text-muted-foreground mt-1">{userEmail}</p>
                                <div className="flex items-center gap-3 mt-4">
                                   <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-slate-400 border border-white/5 uppercase"># {loanRef}</div>
                                   <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary border border-primary/10 uppercase">TIER 1 BORROWER</div>
@@ -786,7 +886,7 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
                                <div className="text-[10px] font-black text-muted-foreground uppercase mb-3 tracking-widest">Contact Number</div>
-                               <div className="text-lg font-bold text-white">{data?.phone || "Not Provided"}</div>
+                               <div className="text-lg font-bold text-white">{userPhone}</div>
                             </div>
                             <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
                                <div className="text-[10px] font-black text-muted-foreground uppercase mb-3 tracking-widest">Location</div>
@@ -850,26 +950,124 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                       <div className="bg-white/5 border border-white/10 rounded-[3rem] p-10">
                          <h3 className="text-xl font-black mb-6">Security & Settings</h3>
                          <div className="space-y-4">
-                            <button className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors text-left group">
-                               <div className="flex items-center gap-3">
-                                  <Lock className="w-4 h-4 text-primary" />
-                                  <span className="text-sm font-bold">Change Password</span>
-                               </div>
-                               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                            <button className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors text-left group">
-                               <div className="flex items-center gap-3">
-                                  <ShieldCheck className="w-4 h-4 text-green-400" />
-                                  <span className="text-sm font-bold">Privacy Settings</span>
-                               </div>
-                               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
-                            </button>
+                            <button 
+                               onClick={() => setShowPasswordModal(true)}
+                               className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors text-left group"
+                             >
+                                <div className="flex items-center gap-3">
+                                   <Lock className="w-4 h-4 text-primary" />
+                                   <span className="text-sm font-bold">Change Password</span>
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
+                             </button>
                          </div>
                       </div>
                    </div>
                 </div>
              </motion.div>
            )}
+
+           {activeTab === "Help" && (
+             <motion.div
+               key="help"
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               exit={{ opacity: 0, x: -20 }}
+               className="space-y-10"
+             >
+                <div className="flex justify-between items-end">
+                   <div>
+                     <h2 className="text-3xl font-black">Help Center</h2>
+                     <p className="text-muted-foreground mt-2">Get support and find answers to your questions.</p>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                   <div className="space-y-8">
+                      <div className="bg-card/40 border border-white/5 rounded-[3rem] p-10">
+                         <h3 className="text-xl font-black mb-6">Contact Support</h3>
+                         <div className="space-y-6">
+                            <div className="flex items-start gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                  <Info className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Support Email</div>
+                                  <a href="mailto:support@pettycash.com.ng" className="text-lg font-bold text-white hover:text-primary transition-colors">support@pettycash.com.ng</a>
+                               </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-4 p-6 bg-white/5 rounded-3xl border border-white/5">
+                               <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500">
+                                  <Zap className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <div className="text-[10px] font-black text-muted-foreground uppercase mb-1">Phone Number</div>
+                                  <a href="tel:+2348000000000" className="text-lg font-bold text-white hover:text-primary transition-colors">+234 800 000 0000</a>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="bg-primary/5 border border-primary/20 rounded-[3rem] p-10">
+                         <h3 className="text-xl font-black mb-4">Frequently Asked Questions</h3>
+                         <div className="space-y-4">
+                            {[
+                               "How long does approval take?",
+                               "What are the interest rates?",
+                               "How do I update my car valuation?",
+                            ].map((q, i) => (
+                               <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors">
+                                  <span className="text-sm font-bold">{q}</span>
+                                  <ChevronRight className="w-4 h-4 text-primary" />
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="bg-card/40 border border-white/5 rounded-[3rem] flex flex-col h-[600px] overflow-hidden">
+                      <div className="p-8 border-b border-white/5 bg-white/5 flex items-center gap-4">
+                         <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                            <Zap className="text-primary-foreground w-6 h-6" />
+                         </div>
+                         <div>
+                            <div className="font-black text-white">Live Support Chat</div>
+                            <div className="text-[10px] font-bold text-green-400 flex items-center gap-1.5 uppercase tracking-widest">
+                               <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> We're Online
+                            </div>
+                         </div>
+                      </div>
+                      
+                      <div className="flex-1 p-8 space-y-6 overflow-y-auto">
+                         <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                               <Zap className="w-6 h-6 text-primary" />
+                            </div>
+                            <div className="bg-white/5 border border-white/10 p-4 rounded-3xl rounded-tl-none text-sm font-medium max-w-[80%]">
+                               Hello {userName.split(' ')[0]}! 👋 How can we help you with your loan application today?
+                            </div>
+                         </div>
+                         <div className="text-center">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Today</span>
+                         </div>
+                      </div>
+
+                      <div className="p-8 bg-[#020617] mt-auto border-t border-white/5 flex gap-4">
+                         <input 
+                           type="text" 
+                           placeholder="Type your message..." 
+                           className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:outline-none focus:border-primary transition-all"
+                         />
+                         <button className="w-12 h-12 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center hover:scale-105 transition-all shadow-xl shadow-primary/20">
+                            <ArrowUpRight className="w-5 h-5" />
+                         </button>
+                      </div>
+                   </div>
+                </div>
+             </motion.div>
+           )}
+
  
            {activeTab === "Payments" && (
             <motion.div
@@ -883,9 +1081,12 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
                <div className="bg-card/40 border border-white/5 rounded-[3rem] overflow-hidden">
                     <div className="p-8 border-b border-white/5 flex justify-between items-center">
                        <h3 className="text-xl font-black">Full Transaction Ledger</h3>
-                       <button className="text-xs font-bold text-primary flex items-center gap-2 hover:underline">
-                          <Download className="w-4 h-4" /> Export CSV
-                       </button>
+                       <button 
+                          onClick={handleExportCSV}
+                          className="text-xs font-bold text-primary flex items-center gap-2 hover:underline"
+                        >
+                           <Download className="w-4 h-4" /> Export CSV
+                        </button>
                     </div>
                     <div className="p-0">
                        <table className="w-full text-left">
@@ -1147,6 +1348,136 @@ export const UserPortal: FC<UserPortalProps> = ({ onLogout, userId }) => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Change Password Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-[200] p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowPasswordModal(false)} />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-[3rem] p-10 z-10">
+               <h3 className="text-3xl font-black mb-8">Update Password</h3>
+               <form onSubmit={handlePasswordChange} className="space-y-6">
+                  <div>
+                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">Current Password</label>
+                     <input 
+                       type="password" 
+                       required 
+                       value={passwordData.oldPassword} 
+                       onChange={e => setPasswordData({...passwordData, oldPassword: e.target.value})}
+                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-primary outline-none transition-all"
+                     />
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">New Password</label>
+                     <input 
+                       type="password" 
+                       required 
+                       value={passwordData.newPassword} 
+                       onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})}
+                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-primary outline-none transition-all"
+                     />
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">Confirm New Password</label>
+                     <input 
+                       type="password" 
+                       required 
+                       value={passwordData.confirmPassword} 
+                       onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-primary outline-none transition-all"
+                     />
+                  </div>
+                  <div className="flex gap-4 pt-4">
+                     <button type="button" onClick={() => setShowPasswordModal(false)} className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-sm hover:bg-white/10 transition-all">Cancel</button>
+                     <button type="submit" className="flex-1 py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20">Update</button>
+                  </div>
+               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Repayment Schedule Modal */}
+      <AnimatePresence>
+        {showScheduleModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowScheduleModal(false)} className="absolute inset-0 bg-[#020617]/95 backdrop-blur-xl" />
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+               animate={{ opacity: 1, scale: 1, y: 0 }} 
+               exit={{ opacity: 0, scale: 0.95, y: 30 }} 
+               className="w-full max-w-4xl bg-card border border-white/10 rounded-[3rem] relative z-10 shadow-2xl overflow-hidden flex flex-col"
+             >
+                <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
+                   <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+                         <Clock className="w-6 h-6" />
+                      </div>
+                      <div>
+                         <h3 className="text-2xl font-black text-white">Repayment Schedule</h3>
+                         <p className="text-[10px] font-bold text-primary tracking-[0.3em] uppercase mt-1">Loan Ref: {loanRef.replace('#', '')}</p>
+                      </div>
+                   </div>
+                   <button onClick={() => setShowScheduleModal(false)} className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group">
+                      <X className="w-5 h-5 text-muted-foreground group-hover:text-white" />
+                   </button>
+                </div>
+
+                <div className="p-0 overflow-hidden">
+                   <div className="max-h-[60vh] overflow-y-auto p-8 pt-4">
+                      <table className="w-full text-left">
+                         <thead>
+                            <tr className="text-[10px] text-muted-foreground uppercase font-black tracking-widest border-b border-white/5">
+                               <th className="px-6 py-4">Installment</th>
+                               <th className="px-6 py-4">Due Date</th>
+                               <th className="px-6 py-4">Amount</th>
+                               <th className="px-6 py-4">Status</th>
+                            </tr>
+                         </thead>
+                         <tbody className="divide-y divide-white/5">
+                            {(data?.repayment_plan || []).map((item: any, i: number) => (
+                              <tr key={i} className="group hover:bg-white/5 transition-colors">
+                                 <td className="px-6 py-5 text-sm font-bold text-white/90">{item.month}</td>
+                                 <td className="px-6 py-5 text-xs text-muted-foreground">{new Date(item.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                                 <td className="px-6 py-5 text-sm font-black text-white">₦{Number(item.amount).toLocaleString()}</td>
+                                 <td className="px-6 py-5">
+                                    <span className={cn(
+                                       "px-3 py-1 rounded-full text-[10px] font-black uppercase border flex items-center gap-1.5 w-fit",
+                                       item.status === 'Paid' ? "bg-green-500/10 text-green-400 border-green-500/20" : 
+                                       item.status === 'Missed' ? "bg-red-500/10 text-red-400 border-red-500/20" : 
+                                       "bg-white/5 text-muted-foreground border-white/10"
+                                    )}>
+                                       <div className={cn("w-1 h-1 rounded-full", 
+                                          item.status === 'Paid' ? "bg-green-400" : 
+                                          item.status === 'Missed' ? "bg-red-400" : "bg-muted-foreground"
+                                       )} />
+                                       {item.status}
+                                    </span>
+                                 </td>
+                              </tr>
+                            ))}
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
+
+                <div className="p-8 border-t border-white/5 bg-white/5 flex justify-between items-center">
+                   <div className="text-xs font-medium text-muted-foreground">
+                      * Status is calculated based on payments received and the current date.
+                   </div>
+                   <button 
+                     onClick={() => setShowScheduleModal(false)}
+                     className="px-8 py-3 bg-primary text-primary-foreground rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                   >
+                      Back to Dashboard
+                   </button>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
+
+
   );
 };
