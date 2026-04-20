@@ -210,8 +210,35 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
   const [agreed, setAgreed] = useState(false);
   
   // Selection State
+  const [dynamicCarData, setDynamicCarData] = useState<Record<string, string[]>>(CAR_DATA);
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
+  const [customMake, setCustomMake] = useState("");
+  const [customModel, setCustomModel] = useState("");
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const res = await fetch('/api/metadata/car-data');
+        const data = await res.json();
+        // Merge with static CAR_DATA
+        const merged = { ...CAR_DATA };
+        Object.entries(data).forEach(([m, models]: [string, any]) => {
+          if (!merged[m]) {
+            merged[m] = models;
+          } else {
+            // Merge model arrays and remove duplicates
+            merged[m] = Array.from(new Set([...merged[m], ...models]));
+          }
+        });
+        setDynamicCarData(merged);
+      } catch (err) {
+        console.error('Failed to fetch car metadata');
+      }
+    };
+    fetchMetadata();
+  }, []);
+
   const [year, setYear] = useState("");
   const [condition, setCondition] = useState("");
   const [stateOfRes, setStateOfRes] = useState("");
@@ -269,8 +296,8 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
     const formData = new FormData();
     formData.append('user_id', userId || 'f1f2f3f4-e5e6-4e5e-8f9f-0a1b2c3d4e5f'); 
     formData.append('amount', loanAmount);
-    formData.append('car_make', make);
-    formData.append('car_model', model);
+    formData.append('car_make', make === "Other" ? customMake : make);
+    formData.append('car_model', model === "Other" ? customModel : model);
     formData.append('car_year', year);
     formData.append('is_owner', isOwner);
     formData.append('has_insurance', hasInsurance);
@@ -576,25 +603,62 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         <label className="text-sm font-bold text-slate-700">What make is your car?</label>
                         <select 
                           value={make}
-                          onChange={(e) => { setMake(e.target.value); setModel(""); }}
+                          onChange={(e) => { 
+                            setMake(e.target.value); 
+                            setModel(""); 
+                            setCustomMake("");
+                            setCustomModel("");
+                          }}
                           className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none"
                         >
                           <option value="">Select Car Make</option>
-                          {Object.keys(CAR_DATA).sort().map(m => <option key={m} value={m}>{m}</option>)}
+                          {Object.keys(dynamicCarData).sort().map(m => <option key={m} value={m}>{m}</option>)}
+                          <option value="Other">Other (Not Listed)</option>
                         </select>
                       </div>
+
+                      {make === "Other" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">Enter your car make</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. Tesla" 
+                            value={customMake}
+                            onChange={(e) => setCustomMake(e.target.value)}
+                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                          />
+                        </div>
+                      )}
+
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">Which model is your car?</label>
                         <select 
                           value={model}
-                          onChange={(e) => setModel(e.target.value)}
+                          onChange={(e) => {
+                            setModel(e.target.value);
+                            setCustomModel("");
+                          }}
                           disabled={!make}
                           className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all appearance-none disabled:opacity-50"
                         >
                           <option value="">Select Car Model</option>
-                          {make && CAR_DATA[make].sort().map(mod => <option key={mod} value={mod}>{mod}</option>)}
+                          {make && make !== "Other" && dynamicCarData[make] && dynamicCarData[make].sort().map(mod => <option key={mod} value={mod}>{mod}</option>)}
+                          <option value="Other">Other (Not Listed)</option>
                         </select>
                       </div>
+
+                      {(model === "Other" || make === "Other") && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">Enter your car model</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. Model 3" 
+                            value={customModel}
+                            onChange={(e) => setCustomModel(e.target.value)}
+                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                          />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">When was your car produced?</label>
                         <select 

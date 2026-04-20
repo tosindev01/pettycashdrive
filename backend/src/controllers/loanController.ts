@@ -388,6 +388,27 @@ export const getAdminStats = async (req: Request, res: Response) => {
     }
 };
 
+export const getCarMetadata = async (req: Request, res: Response) => {
+    try {
+        const [rows]: any = await pool.execute('SELECT DISTINCT make, model FROM car_details');
+        const dynamicData: Record<string, string[]> = {};
+        
+        rows.forEach((row: any) => {
+            const make = row.make;
+            const model = row.model;
+            if (make && model) {
+                if (!dynamicData[make]) dynamicData[make] = [];
+                if (!dynamicData[make].includes(model)) dynamicData[make].push(model);
+            }
+        });
+        
+        res.json(dynamicData);
+    } catch (error) {
+        console.error('Metadata Fetch Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 export const getAuditLogs = async (req: Request, res: Response) => {
     try {
         const [logs]: any = await pool.execute(`

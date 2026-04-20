@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { register, login, getAdminUsers, cleanupSystem, changePassword } from '../controllers/authController';
-import { createLoan, getUserLoans, getLoanDetails, getAdminLoans, updateLoanStatus, addLoanPayment, getAuditLogs, getAdminStats } from '../controllers/loanController';
+import { createLoan, getUserLoans, getLoanDetails, getAdminLoans, updateLoanStatus, addLoanPayment, getAuditLogs, getAdminStats, getCarMetadata } from '../controllers/loanController';
 import { upload } from '../middleware/upload';
 
 const router = Router();
@@ -22,6 +22,7 @@ router.post('/loans', upload.fields([
 router.get('/loans/user/:userId', getUserLoans);
 router.get('/loans/:id', getLoanDetails);
 router.post('/loans/:id/payment', addLoanPayment);
+router.get('/metadata/car-data', getCarMetadata);
 
 // Admin Routes
 router.get('/admin/loans', getAdminLoans);
