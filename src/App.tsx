@@ -291,7 +291,37 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
     setFiles(prev => ({ ...prev, [field]: file }));
   };
 
+  const validateStep = () => {
+    if (step === 1) {
+      if (!fullName || !phone || !email || !loanAmount || !tenure || !agreed) {
+        setAlertModal({ show: true, message: 'Please fill all fields and agree to the terms to proceed.', type: 'error' });
+        return false;
+      }
+    } else if (step === 2) {
+      const isMakeValid = make === "Other" ? !!customMake : !!make;
+      const isModelValid = model === "Other" ? !!customModel : !!model;
+      if (!isMakeValid || !isModelValid || !year || !condition || !stateOfRes || !plateNumber || !hasInsurance || !insuranceType) {
+        setAlertModal({ show: true, message: 'Please provide all vehicle details to proceed.', type: 'error' });
+        return false;
+      }
+    } else if (step === 3) {
+      const requiredFiles = ['roadworthiness_certificate', 'vehicle_license', 'proof_of_ownership', 'front_photo', 'back_photo'];
+      const missing = requiredFiles.filter(f => !files[f]);
+      if (missing.length > 0) {
+        setAlertModal({ show: true, message: 'Please upload all required documents to proceed.', type: 'error' });
+        return false;
+      }
+    } else if (step === 4) {
+      if (!bankName || !accountNumber || !accountName || !nin || !bvn || !nokFullName || !nokPhone || !nokEmail || !nokAddress || !nokCity || !nokState) {
+        setAlertModal({ show: true, message: 'Please fill all payout and next of kin details.', type: 'error' });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const submitLoanApplication = async () => {
+    if (!validateStep()) return;
     setLoading(true);
     const formData = new FormData();
     formData.append('user_id', userId || 'f1f2f3f4-e5e6-4e5e-8f9f-0a1b2c3d4e5f'); 
@@ -487,7 +517,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Personal Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What's your full name?</label>
+                        <label className="text-sm font-bold text-slate-700">What's your full name? <span className="text-red-500">*</span></label>
                         <input 
                           type="text" 
                           placeholder="Enter Full Name" 
@@ -497,7 +527,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What's your phone number?</label>
+                        <label className="text-sm font-bold text-slate-700">What's your phone number? <span className="text-red-500">*</span></label>
                         <input 
                           type="tel" 
                           placeholder="Enter Phone Number" 
@@ -507,7 +537,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What's your email address?</label>
+                        <label className="text-sm font-bold text-slate-700">What's your email address? <span className="text-red-500">*</span></label>
                         <input 
                           type="email" 
                           placeholder="Enter Email Address" 
@@ -523,7 +553,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Loan Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">How much do you need?</label>
+                        <label className="text-sm font-bold text-slate-700">How much do you need? <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">NGN</span>
                           <input 
@@ -539,7 +569,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">For how long do you need this loan?</label>
+                        <label className="text-sm font-bold text-slate-700">For how long do you need this loan? <span className="text-red-500">*</span></label>
                         <select 
                           value={tenure}
                           onChange={(e) => setTenure(e.target.value)}
@@ -552,7 +582,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">How would you like to repay your loan?</label>
+                        <label className="text-sm font-bold text-slate-700">How would you like to repay your loan? <span className="text-red-500">*</span></label>
                         <select 
                           value={repaymentPlan}
                           onChange={(e) => setRepaymentPlan(e.target.value)}
@@ -580,7 +610,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                 </div>
 
                 <button 
-                  onClick={() => setStep(2)}
+                  onClick={() => validateStep() && setStep(2)}
                   className={cn(
                     "mt-12 w-full py-5 rounded-[2rem] font-black text-xl transition-all shadow-xl flex items-center justify-center gap-3",
                     agreed ? "bg-[#020617] text-white hover:scale-[1.02]" : "bg-slate-100 text-slate-400 cursor-not-allowed"
@@ -600,7 +630,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Car Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What make is your car?</label>
+                        <label className="text-sm font-bold text-slate-700">What make is your car? <span className="text-red-500">*</span></label>
                         <select 
                           value={make}
                           onChange={(e) => { 
@@ -619,7 +649,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
 
                       {make === "Other" && (
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Enter your car make</label>
+                          <label className="text-sm font-bold text-slate-700">Enter your car make <span className="text-red-500">*</span></label>
                           <input 
                             type="text" 
                             placeholder="e.g. Tesla" 
@@ -631,7 +661,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                       )}
 
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Which model is your car?</label>
+                        <label className="text-sm font-bold text-slate-700">Which model is your car? <span className="text-red-500">*</span></label>
                         <select 
                           value={model}
                           onChange={(e) => {
@@ -649,7 +679,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
 
                       {(model === "Other" || make === "Other") && (
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Enter your car model</label>
+                          <label className="text-sm font-bold text-slate-700">Enter your car model <span className="text-red-500">*</span></label>
                           <input 
                             type="text" 
                             placeholder="e.g. Model 3" 
@@ -660,7 +690,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </div>
                       )}
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">When was your car produced?</label>
+                        <label className="text-sm font-bold text-slate-700">When was your car produced? <span className="text-red-500">*</span></label>
                         <select 
                           value={year}
                           onChange={(e) => setYear(e.target.value)}
@@ -671,7 +701,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What's the condition of your car?</label>
+                        <label className="text-sm font-bold text-slate-700">What's the condition of your car? <span className="text-red-500">*</span></label>
                         <select 
                           value={condition}
                           onChange={(e) => setCondition(e.target.value)}
@@ -683,7 +713,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                       </div>
                       
                       <div className="pt-4">
-                        <p className="text-sm font-bold text-slate-700 mb-4">Are you the registered owner of the car?</p>
+                        <p className="text-sm font-bold text-slate-700 mb-4">Are you the registered owner of the car? <span className="text-red-500">*</span></p>
                         <div className="flex gap-8">
                           <label className="flex items-center gap-2 cursor-pointer group">
                              <input 
@@ -716,7 +746,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Registration Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Which state do you reside in?</label>
+                        <label className="text-sm font-bold text-slate-700">Which state do you reside in? <span className="text-red-500">*</span></label>
                         <select 
                           value={stateOfRes}
                           onChange={(e) => setStateOfRes(e.target.value)}
@@ -727,7 +757,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What is your car's license plate number?</label>
+                        <label className="text-sm font-bold text-slate-700">What is your car's license plate number? <span className="text-red-500">*</span></label>
                         <input 
                           type="text" 
                           placeholder="Enter License Plate Number" 
@@ -737,7 +767,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Does your car have Insurance?</label>
+                        <label className="text-sm font-bold text-slate-700">Does your car have Insurance? <span className="text-red-500">*</span></label>
                         <select 
                           value={hasInsurance}
                           onChange={(e) => setHasInsurance(e.target.value)}
@@ -749,7 +779,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">What type of insurance do you have?</label>
+                        <label className="text-sm font-bold text-slate-700">What type of insurance do you have? <span className="text-red-500">*</span></label>
                         <select 
                           value={insuranceType}
                           onChange={(e) => setInsuranceType(e.target.value)}
@@ -765,7 +795,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                 </div>
 
                 <button 
-                  onClick={() => setStep(3)}
+                  onClick={() => validateStep() && setStep(3)}
                   className="mt-12 w-full py-5 bg-[#020617] text-white rounded-[2rem] font-black text-xl hover:scale-[1.02] transition-all shadow-xl flex items-center justify-center gap-3"
                 >
                   Next Step <ArrowRight className="w-6 h-6" />
@@ -782,7 +812,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <div className="space-y-4">
                       {["Roadworthiness Certificate", "Vehicle License", "Proof of Ownership"].map((label, i) => (
                         <div key={i} className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">{label}</label>
+                          <label className="text-sm font-bold text-slate-700">{label} <span className="text-red-500">*</span></label>
                           <div className="relative group overflow-hidden bg-slate-50 border border-dashed border-slate-200 p-8 rounded-2xl flex flex-col items-center justify-center hover:border-primary/50 transition-colors cursor-pointer">
                              <Plus className="w-6 h-6 text-slate-300 group-hover:text-primary mb-2 transition-transform group-hover:scale-110" />
                              <span className="text-xs font-bold text-slate-400">
@@ -804,7 +834,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <div className="space-y-4">
                       {["Front Photo", "Back Photo"].map((label, i) => (
                         <div key={i} className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">{label}</label>
+                          <label className="text-sm font-bold text-slate-700">{label} <span className="text-red-500">*</span></label>
                           <div className="relative group overflow-hidden bg-slate-50 border border-dashed border-slate-200 p-12 rounded-2xl flex flex-col items-center justify-center hover:border-primary/50 transition-colors cursor-pointer">
                              <Plus className="w-8 h-8 text-slate-300 group-hover:text-primary mb-2 transition-transform group-hover:scale-110" />
                              <span className="text-xs font-bold text-slate-400">
@@ -823,7 +853,7 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                 </div>
 
                 <button 
-                  onClick={() => setStep(4)}
+                  onClick={() => validateStep() && setStep(4)}
                   className="mt-12 w-full py-5 bg-[#020617] text-white rounded-[2rem] font-black text-xl hover:scale-[1.02] transition-all shadow-xl flex items-center justify-center gap-3"
                 >
                   Next Step <ArrowRight className="w-6 h-6" />
@@ -839,24 +869,24 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Bank Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Bank Name</label>
+                        <label className="text-sm font-bold text-slate-700">Bank Name <span className="text-red-500">*</span></label>
                         <input type="text" placeholder="e.g. GTBank" value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Account Number</label>
+                        <label className="text-sm font-bold text-slate-700">Account Number <span className="text-red-500">*</span></label>
                         <input type="text" placeholder="10 Digits" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Account Name</label>
+                        <label className="text-sm font-bold text-slate-700">Account Name <span className="text-red-500">*</span></label>
                         <input type="text" placeholder="Full Legal Name" value={accountName} onChange={(e) => setAccountName(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">NIN</label>
+                          <label className="text-sm font-bold text-slate-700">NIN <span className="text-red-500">*</span></label>
                           <input type="text" placeholder="NIN Number" value={nin} onChange={(e) => setNin(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">BVN</label>
+                          <label className="text-sm font-bold text-slate-700">BVN <span className="text-red-500">*</span></label>
                           <input type="text" placeholder="BVN Number" value={bvn} onChange={(e) => setBvn(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                         </div>
                       </div>
@@ -867,30 +897,30 @@ const LoanForm: FC<{ onBack: () => void, userId: string }> = ({ onBack, userId }
                     <h3 className="font-black text-sm uppercase tracking-wider text-slate-400">Next of Kin Details</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Full Name</label>
+                        <label className="text-sm font-bold text-slate-700">Full Name <span className="text-red-500">*</span></label>
                         <input type="text" placeholder="Full Name" value={nokFullName} onChange={(e) => setNokFullName(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Phone</label>
+                          <label className="text-sm font-bold text-slate-700">Phone <span className="text-red-500">*</span></label>
                           <input type="tel" placeholder="Phone Number" value={nokPhone} onChange={(e) => setNokPhone(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">Email</label>
+                          <label className="text-sm font-bold text-slate-700">Email <span className="text-red-500">*</span></label>
                           <input type="email" placeholder="Email Address" value={nokEmail} onChange={(e) => setNokEmail(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Home Address</label>
+                        <label className="text-sm font-bold text-slate-700">Home Address <span className="text-red-500">*</span></label>
                         <input type="text" placeholder="Full Address" value={nokAddress} onChange={(e) => setNokAddress(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">City</label>
+                          <label className="text-sm font-bold text-slate-700">City <span className="text-red-500">*</span></label>
                           <input type="text" placeholder="City" value={nokCity} onChange={(e) => setNokCity(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary focus:outline-none transition-all" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-slate-700">State</label>
+                          <label className="text-sm font-bold text-slate-700">State <span className="text-red-500">*</span></label>
                           <select 
                             value={nokState} 
                             onChange={(e) => setNokState(e.target.value)} 
