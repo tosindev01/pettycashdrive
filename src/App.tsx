@@ -175,13 +175,23 @@ const StatCard: FC<{ value: string; label: string }> = ({ value, label }) => (
 
 // --- Data Constants ---
 const CAR_DATA: Record<string, string[]> = {
-  "Toyota": ["Camry", "Corolla", "Hilux", "Prado", "Venza", "Rav4", "Highlander"],
-  "Mercedes-Benz": ["C-Class", "E-Class", "G-Wagon", "GLK", "GLE", "ML"],
-  "Lexus": ["ES350", "RX350", "GX460", "LX570", "IS250"],
-  "Honda": ["Accord", "Civic", "CR-V", "Pilot"],
-  "Ford": ["Edge", "Explorer", "F-150", "Focus"],
-  "Hyundai": ["Elantra", "Sonata", "Tucson", "Santa Fe"],
-  "Kia": ["Rio", "Cerato", "Sportage", "Sorento"],
+  "Toyota": ["Camry", "Corolla", "Hilux", "Prado", "Venza", "Rav4", "Highlander", "Avalon", "Sienna", "Tacoma", "Tundra", "Yaris", "Land Cruiser", "4Runner"],
+  "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "G-Wagon", "GLK", "GLE", "ML", "GLC", "CLA", "GLA", "A-Class", "Vito"],
+  "Lexus": ["ES350", "RX350", "GX460", "LX570", "IS250", "CT200h", "NX200t", "GS350", "LS460"],
+  "Honda": ["Accord", "Civic", "CR-V", "Pilot", "City", "Odyssey", "HR-V", "Ridgeline"],
+  "Ford": ["Edge", "Explorer", "F-150", "Focus", "Mustang", "Escape", "Ranger", "Fusion", "Everest"],
+  "Hyundai": ["Elantra", "Sonata", "Tucson", "Santa Fe", "Accent", "Creta", "Kona", "Palisade", "Venue"],
+  "Kia": ["Rio", "Cerato", "Sportage", "Sorento", "Picanto", "Optima", "Stinger", "Telluride", "Soul"],
+  "Nissan": ["Almera", "Altima", "Maxima", "Pathfinder", "Patrol", "Sentra", "X-Terra", "X-Trail", "Qashqai", "Titan", "Frontier"],
+  "BMW": ["3 Series", "5 Series", "7 Series", "X1", "X3", "X5", "X6", "M3", "M5"],
+  "Audi": ["A3", "A4", "A6", "A8", "Q3", "Q5", "Q7", "Q8"],
+  "Volkswagen": ["Golf", "Jetta", "Passat", "Tiguan", "Touareg", "Atlas", "Polo", "Amarok"],
+  "Mazda": ["Mazda3", "Mazda6", "CX-5", "CX-7", "CX-9", "MX-5"],
+  "Chevrolet": ["Cruze", "Malibu", "Impala", "Equinox", "Tahoe", "Suburban", "Silverado", "Camaro", "Spark", "Captiva"],
+  "Jeep": ["Grand Cherokee", "Cherokee", "Wrangler", "Compass", "Renegade", "Gladiator"],
+  "Land Rover": ["Range Rover", "Range Rover Sport", "Range Rover Velar", "Evoque", "Discovery", "Defender"],
+  "Mitsubishi": ["Lancer", "Outlander", "Pajero", "ASX", "Eclipse Cross", "L200", "Montero"],
+  "Peugeot": ["206", "208", "301", "307", "308", "406", "407", "408", "508", "2008", "3008", "5008"]
 };
 
 const STATES_IN_NIGERIA = [
@@ -191,7 +201,7 @@ const STATES_IN_NIGERIA = [
   "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
 ];
 
-const PROD_YEARS = Array.from({ length: 21 }, (_, i) => (new Date().getFullYear() - i).toString());
+const PROD_YEARS = Array.from({ length: 27 }, (_, i) => (2026 - i).toString());
 
 const CAR_CONDITIONS = ["Mint Condition", "Good", "Fair", "Needs Repair"];
 
